@@ -1,0 +1,6 @@
+server:
+  port: "8080"
+db:
+  url: "postgres://user:pass@localhost:5432/crypto?sslmode=disable"
+logging:
+  level: "info"
