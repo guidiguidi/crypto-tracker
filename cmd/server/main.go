@@ -1,68 +1,24 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"strings"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/guidiguidi/crypto-tracker/internal/config"
+	"github.com/guidiguidi/crypto-tracker/internal/repository"
+	"github.com/guidiguidi/crypto-tracker/internal/api/handlers"
 )
 
 func main() {
-	r := gin.Default()
-	r.GET("/health", healthHandler)
-	r.GET("/prices", pricesHandler)
-	r.Run(":8080")
-}
-
-func healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"status": "healthy"})
-}
-
-func pricesHandler(c *gin.Context) {
-	coins := c.Query("coins")
-	if coins == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "coins query parameter is required"})
-		return
-	}
-	coinList := splitCoins(coins)
-	prices, err := fetchCoinGecko(coinList)
+	cfg := config.Load()
+	repo, err := repository.New(cfg.DB.URL)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch prices"})
-		return
+		log.Fatal("DB failed:", err)
 	}
-	c.JSON(http.StatusOK, prices)
-	
-}
-func splitCoins(coins string) []string {
-	var coinList []string
-	for _, coin := range strings.Split(coins, ",") {
-		coinList = append(coinList, coin)
-	}
-	return coinList
-}
 
-func fetchCoinGecko(coins []string) (map[string]interface{}, error) {
-    ids := strings.Join(coins, ",")
-    url := fmt.Sprintf("https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=usd", ids)
-
-    resp, err := http.Get(url)
-    if err != nil {
-        return nil, fmt.Errorf("HTTP request failed: %w", err)
-    }
-    defer resp.Body.Close()
-
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, fmt.Errorf("read response failed: %w", err)
-    }
-
-    var prices map[string]interface{}
-    if err := json.Unmarshal(body, &prices); err != nil {
-        return nil, fmt.Errorf("JSON unmarshal failed: %w", err)
-    }
-
-    return prices, nil
+	r := gin.Default()
+	r.GET("/health", handlers.Health)
+	r.POST("/portfolio", handlers.CreatePortfolio(repo))
+	r.GET("/portfolio/:user_id", handlers.GetPortfolio(repo)) // Новый!
+	r.Run(":" + cfg.Server.Port)
 }
