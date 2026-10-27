@@ -1,11 +1,15 @@
 # Crypto Tracker API
 
-REST API для трекинга крипто-портфеля. Gin + Postgres + CoinGecko.
+Lightweight REST API for tracking cryptocurrency portfolios. Built with Go (Gin), PostgreSQL, and CoinGecko API.
 
 ## Endpoints
-- GET /prices?coins=bitcoin → цены
-- POST /portfolio → добавить позицию
+- `GET /health` — Service health probe
+- `GET /prices?coins=bitcoin` — Spot prices
+- `POST /portfolio` — Add portfolio position
+- `GET /portfolio/:user_id` — Retrieve portfolio positions
 
-## Local run
-docker-compose up
-curl localhost:8080/health
+## Local Development
+```bash
+docker compose up -d
+curl http://localhost:8080/health
+```

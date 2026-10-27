@@ -19,6 +19,6 @@ func main() {
 	r := gin.Default()
 	r.GET("/health", handlers.Health)
 	r.POST("/portfolio", handlers.CreatePortfolio(repo))
-	r.GET("/portfolio/:user_id", handlers.GetPortfolio(repo)) // Новый!
+	r.GET("/portfolio/:user_id", handlers.GetPortfolio(repo)) // Query user portfolio
 	r.Run(":" + cfg.Server.Port)
 }
